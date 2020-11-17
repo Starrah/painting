@@ -1,5 +1,10 @@
+import time
+
 import torch
 import copy
+
+from torch.utils.data import DataLoader
+
 from model import SSD, MultiBoxLoss
 from dataset import KittiDataset
 
@@ -54,8 +59,8 @@ def train_model(model, dataloaders, criterion, optimizer, num_epochs=1):
     
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 ssd = SSD(resnet_type=34, n_classes=2).to(device)
-trainset = KittiDataset(root="/home/jovyan/work", mode="training", valid=False)
-valset = KittiDataset(root="/home/jovyan/work", mode="training", valid=True)
+trainset = KittiDataset(root="/repository/KITTI", mode="training", valid=False)
+valset = KittiDataset(root="/repository/KITTI", mode="training", valid=True)
 
 datasets = {'train': trainset, 'val': valset}
 dataloaders_dict = {x: DataLoader(datasets[x], batch_size=4, shuffle=True, collate_fn=datasets[x].collate_fn, num_workers=0, drop_last=True) for x in ['train', 'val']}

@@ -1,3 +1,6 @@
+import math
+import pickle
+
 import torch
 import PIL
 import os
@@ -5,6 +8,7 @@ import copy
 import numpy as np
 from torch import nn
 from torchvision import transforms
+import torchvision
 
 class KittiDataset(torch.utils.data.Dataset):
     def __init__(self, root, mode, valid):
@@ -19,7 +23,7 @@ class KittiDataset(torch.utils.data.Dataset):
             self.file_nums_with_cars = pickle.load(f)
 
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-        deeplab101 = torch.models.segmentation.deeplabv3_resnet101(pretrained=True)
+        deeplab101 = torchvision.models.segmentation.deeplabv3_resnet101(pretrained=True)
         #Change out channels to 5 since that is num_categories for my KITTI-modified Cityscapes data
         deeplab101.classifier[4] = nn.Conv2d(256, 5, kernel_size=(1, 1), stride=(1, 1))
         deeplab101.aux_classifier[4] = nn.Conv2d(256, 5, kernel_size=(1, 1), stride=(1, 1))

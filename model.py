@@ -1,7 +1,15 @@
+from math import sqrt
+
 import numba
 import torch
 import numpy as np
+from scipy import stats
 from torch import nn
+import torchvision
+import torch.nn.functional as F
+
+from utils import cxcy_to_xy, gcxgcy_to_cxcy, find_jaccard_overlap, cxcy_to_gcxgcy, xy_to_cxcy
+
 
 @numba.jit(nopython=True)
 def make_input_tensor(input_tensor, new_aug_lidar_cam_coords, bin_idxs, pillar_idxs):
@@ -115,7 +123,7 @@ class PFNv2(nn.Module):
         encoded_bev[:, pillar_idxs[:,0], pillar_idxs[:,1]] = encoded_pillars[:, :num_nonempty_pillars]
         return encoded_bev 
     
-    class PredictionConvolutions(nn.Module):
+class PredictionConvolutions(nn.Module):
     def __init__(self, channels_for_block, n_classes):
         super(PredictionConvolutions, self).__init__()
 
@@ -248,7 +256,7 @@ class SSD(nn.Module):
         return prior_boxes
 
     def detect_objects(self, predicted_locs, predicted_scores, min_score, max_overlap, top_k):
-        
+        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         batch_size = predicted_locs.size(0)
         n_priors = self.priors_cxcy.size(0)
         predicted_scores = F.softmax(predicted_scores, dim=2)  
@@ -373,6 +381,7 @@ class MultiBoxLoss(nn.Module):
         batch_size = predicted_locs.size(0)
         n_priors = self.priors_cxcy.size(0)
         n_classes = predicted_scores.size(2)
+        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
         assert n_priors == predicted_locs.size(1) == predicted_scores.size(1)
 
